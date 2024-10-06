@@ -33,7 +33,7 @@ credentials_json = os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON')
 
 # If the credentials are not in an environment variable, use the file path
 if not credentials_json:
-    credentials_path = os.getenv('GOOGLE_APPLICATION_CREDENTIALS', 'capstone-t5-6e8ba9f61a31.json')
+    credentials_path = os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON')
     with open(credentials_path, 'r') as file:
         credentials_json = file.read()
 
