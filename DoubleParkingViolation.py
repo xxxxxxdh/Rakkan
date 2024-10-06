@@ -13,19 +13,26 @@ import json
 import time
 from sqlalchemy import create_engine, MetaData, Table, Column, DateTime, String , select , delete , LargeBinary
 from urllib.parse import quote_plus
+from dotenv import load_dotenv # type: ignore
 
+# Load environment variables
+load_dotenv()
 
 # Get the JSON string from environment variable
-credentials_json = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS_JSON')
+credentials_json = os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON')
 
 # If the credentials are not in an environment variable, use the file path
 if not credentials_json:
-    credentials_path = "capstone-t5-6e8ba9f61a31.json"
+    credentials_path = os.getenv('GOOGLE_APPLICATION_CREDENTIALS', 'capstone-t5-6e8ba9f61a31.json')
     with open(credentials_path, 'r') as file:
         credentials_json = file.read()
 
 # Parse the JSON string
 credentials_dict = json.loads(credentials_json)
+credentials = service_account.Credentials.from_service_account_info(credentials_dict)
+
+# Use the credentials
+client = vision.ImageAnnotatorClient(credentials=credentials)
 
 # Create credentials object
 credentials = service_account.Credentials.from_service_account_info(credentials_dict)

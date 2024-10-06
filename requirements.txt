@@ -9,3 +9,5 @@ google-cloud-storage
 matplotlib 
 psycopg2-binary
 python-multipart
+python-dotenv==0.19.1
+google-cloud-storage==1.42.0
