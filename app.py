@@ -20,7 +20,7 @@ import json
 from google.oauth2 import service_account
 
 # Load credentials from environment variable
-credentials_json = os.environ.get('GOOGLE_CLOUD_CREDENTIALS')
+credentials_json = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS_JSON')
 credentials_dict = json.loads(credentials_json)
 credentials = service_account.Credentials.from_service_account_info(credentials_dict)
 
