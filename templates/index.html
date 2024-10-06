@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detect Double Parking Cars</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f2f2f2, #d9d9d9);
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .container {
+            background: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            text-align: center;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        h1 {
+            font-size: 40px;
+            margin-bottom: 20px;
+            color: #4A90E2;
+        }
+
+        p {
+            font-size: 18px;
+            margin-bottom: 30px;
+            color: #555;
+        }
+
+        .logo {
+            width: 150px; /* Adjust as necessary */
+            margin-bottom: 20px;
+        }
+
+        .file-input {
+            border: 2px solid #4A90E2;
+            padding: 12px;
+            width: 100%;
+            border-radius: 5px;
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .file-input:focus {
+            border-color: #2980b9;
+        }
+
+        .upload-btn {
+            background-color: #30049E;
+            color: #ffffff;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background-color 0.3s, transform 0.2s;
+            width: 100%;
+        }
+
+        .upload-btn:hover {
+            background-color: #30049E;
+            transform: scale(1.05);
+        }
+
+        #uploadProgress {
+            display: none;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        #progressBar {
+            width: 100%;
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        #progressBarFill {
+            width: 0%;
+            height: 100%;
+            background-color: #4A90E2;
+            transition: width 0.5s;
+        }
+
+        #resultMessage {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #4A90E2;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: transparent;
+            border: none;
+            color: #30049E;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: color 0.3s;
+        }
+
+        .back-button:hover {
+            color: #2980b9;
+        }
+
+        .back-button i {
+            margin-right: 5px; /* Space between icon and text */
+        }
+    </style>
+</head>
+<body>
+    <button class="back-button" onclick="window.location.href='/'">
+        <i class="fas fa-arrow-left"></i> Back
+    </button>
+    
+    <div class="container">
+        <img src="/static/logo.png" alt="Rakkan Logo" class="logo">
+        
+        <p>Upload your video to analyze. Rakkan advanced AI will detect any parking violations!</p>
+        <input type="file" id="videoFile" accept="video/*" class="file-input" required>
+        <button id="uploadBtn" class="upload-btn">Upload</button>
+        <div id="uploadProgress">
+            <p>Upload Progress:</p>
+            <div id="progressBar">
+                <div id="progressBarFill"></div>
+            </div>
+        </div>
+        <div id="resultMessage" style="display: none;"></div>
+    </div>
+
+    <script>
+        const uploadBtn = document.getElementById('uploadBtn');
+        const videoFile = document.getElementById('videoFile');
+        const uploadProgress = document.getElementById('uploadProgress');
+        const progressBarFill = document.getElementById('progressBarFill');
+        const resultMessage = document.getElementById('resultMessage');
+
+        uploadBtn.addEventListener('click', async () => {
+            if (!videoFile.files.length) {
+                alert('Please select a video file first.');
+                return;
+            }
+
+            const file = videoFile.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+
+            uploadProgress.style.display = 'block';
+            uploadBtn.disabled = true;
+            resultMessage.style.display = 'none';
+
+            try {
+                const response = await fetch('/upload_video/', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('Upload failed');
+                }
+
+                const result = await response.json();
+                console.log('Upload result:', result);
+
+                // Show alert after successful upload
+                alert('Video uploaded successfully! The system will now process the video.');
+
+                // Display result message
+                resultMessage.textContent = `Video "${result.filename}" uploaded successfully. Processing will start shortly.`;
+                resultMessage.style.display = 'block';
+
+                // Start processing
+                await startProcessing(result.storage_url);
+
+            } catch (error) {
+                alert('Upload failed: ' + error.message);
+                resultMessage.textContent = 'Upload failed: ' + error.message;
+                resultMessage.style.display = 'block';
+            } finally {
+                uploadProgress.style.display = 'none';
+                uploadBtn.disabled = false;
+            }
+        });
+
+        async function startProcessing(storage_url) {
+            try {
+                const response = await fetch('/start_processing/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ storage_url: storage_url }),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Processing failed to start');
+                }
+
+                const result = await response.json();
+                console.log('Processing result:', result);
+                resultMessage.textContent += ' Processing completed.';
+            } catch (error) {
+                console.error('Error starting processing:', error);
+                resultMessage.textContent += ' Error starting processing: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

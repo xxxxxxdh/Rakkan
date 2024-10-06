@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+opencv-python
+numpy
+ultralytics
+google-cloud-vision
+sqlalchemy
+google-cloud-storage
+matplotlib 
+psycopg2-binary
+python-multipart

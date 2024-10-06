@@ -1,0 +1,33 @@
+# Environment
+myenv/
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+
+# Google Cloud
+*.json
+
+# Video files
+*.MOV
+
+# Output directories
+video_output/
+violated_objects/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo

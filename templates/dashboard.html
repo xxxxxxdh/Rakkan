@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Violations Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"> <!-- Include Font Awesome -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff;
+            color: #30049E;
+            display: flex;
+        }
+        .sidebar {
+            width: 200px;
+            background-color: #d9d9d9;
+            padding: 20px 0;
+            position: fixed;
+            top: 60px; /* Adjusted to position it below the back button */
+            height: calc(100vh - 60px); /* Full height minus the back button */
+        }
+        .sidebar-item {
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .sidebar-item:hover {
+            background-color: #aeb1bd;
+        }
+        .main-content {
+            margin-left: 200px;
+            padding: 20px;
+            width: calc(100% - 200px);
+        }
+        .top-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #d9d9d9;
+        }
+        .logo {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .card {
+            background-color: #d9d9d9;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h2 {
+            margin-top: 0;
+            color: #30049E;
+            font-size: 18px;
+        }
+        .chart-container {
+            height: 250px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        th, td {
+            text-align: left;
+            padding: 8px;
+            border-bottom: 1px solid #30049E;
+        }
+        th {
+            background-color: #ffffff;
+        }
+        input, select, button {
+            margin-right: 10px;
+            padding: 5px;
+            background-color: #ffffff;
+            border: none;
+            color: #30049E;
+            font-size: 14px;
+        }
+        button {
+            cursor: pointer;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        .stat-card {
+            background-color: #ffffff;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #a0a0a0;
+        }
+        .top-times {
+            margin-top: 20px;
+        }
+        .top-times-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .top-times-list li {
+            margin-bottom: 5px;
+        }
+        .back-button1 {
+            position: fixed; /* Fixed positioning */
+            top: 20px; /* Distance from the top */
+            left: 20px; /* Distance from the left */
+            background-color: transparent;
+            border: none;
+            color: #30049E;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            z-index: 10; /* Ensure button is on top */
+            transition: color 0.3s;
+        }
+
+        .back-button1:hover {
+            color: #2980b9;
+        }
+
+        .back-button1 i {
+            margin-right: 5px; /* Space between icon and text */
+        }
+    </style>
+</head>
+<body>
+    <button class="back-button1" onclick="window.location.href='/'">
+        <i class="fas fa-arrow-left"></i> Back
+    </button>    
+    <div class="sidebar">
+        <div class="sidebar-item" onclick="showSection('overview')">Overview</div>
+        <div class="sidebar-item" onclick="showSection('daily-view')">Daily View</div>
+        <div class="sidebar-item" onclick="showSection('violations')">Violations Over Time</div>
+    </div>
+    <div class="main-content">
+        <nav class="top-nav">
+            <div class="logo">Violations Dashboard</div>
+        </nav>
+
+        <div id="overview" class="section card">
+            <h2>Overview</h2>
+            <div class="grid-container" id="overviewStats"></div>
+            <div class="chart-container">
+                <canvas id="violationTimeChart"></canvas>
+            </div>
+            <div class="top-times">
+                <h3>Top 5 Violating Times</h3>
+                <ul class="top-times-list" id="topTimesList"></ul>
+            </div>
+        </div>
+        
+        <div id="daily-view" class="section card">
+            <h2>Daily View</h2>
+            <div>
+                <input type="date" id="dateInput" onchange="fetchDailyViolations()">
+            </div>
+            <table id="dailyViolationsTable">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Plate</th>
+                        <th>Picture</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        
+        <div id="violations" class="section card">
+            <h2>Violations Over Time</h2>
+            <div>
+                <select id="timeRangeSelect" onchange="updateViolationsChart()">
+                    <option value="day">Last 24 hours</option>
+                    <option value="week">Last 7 days</option>
+                    <option value="month">Last 30 days</option>
+                </select>
+            </div>
+            <div class="chart-container">
+                <canvas id="violationsChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let violationsChart, violationTimeChart;
+    
+        async function fetchOverviewStats() {
+            const response = await fetch('/overview_stats');
+            const data = await response.json();
+            const overviewElement = document.getElementById('overviewStats');
+            overviewElement.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${data.total_violations}</div>
+                    <div class="stat-label">Total Violations</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${data.unique_plates}</div>
+                    <div class="stat-label">Unique Plates</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${data.peak_hour}</div>
+                    <div class="stat-label">Peak Hour</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${data.total_violations_today}</div>
+                    <div class="stat-label">Violations Today</div>
+                </div>
+            `;
+    
+            // Create doughnut chart for violation times
+            const ctx = document.getElementById('violationTimeChart').getContext('2d');
+            violationTimeChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(data.violation_times),
+                    datasets: [{
+                        data: Object.values(data.violation_times),
+                        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Violation Times Distribution'
+                        }
+                    }
+                }
+            });
+    
+            // Add top 5 violating times
+            const topTimesList = document.getElementById('topTimesList');
+            topTimesList.innerHTML = '';
+            data.top_violating_times.forEach(time => {
+                const li = document.createElement('li');
+                li.textContent = `${time.time}: ${time.count} violations`;
+                topTimesList.appendChild(li);
+            });
+        }
+    
+        async function updateViolationsChart() {
+            const timeRange = document.getElementById('timeRangeSelect').value;
+            const response = await fetch(`/violation_times?range=${timeRange}`);
+            const data = await response.json();
+            const ctx = document.getElementById('violationsChart').getContext('2d');
+            
+            if (violationsChart) {
+                violationsChart.destroy();
+            }
+            
+            violationsChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(item => new Date(item.hour).toLocaleString()),
+                    datasets: [{
+                        label: 'Number of Violations',
+                        data: data.map(item => item.count),
+                        borderColor: 'rgb(75, 192, 192)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: timeRange === 'day' ? 'hour' : 'day'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+    
+        async function fetchDailyViolations() {
+            const date = document.getElementById('dateInput').value;
+            const response = await fetch(`/daily_violations?date=${date}`);
+            const violations = await response.json();
+            const tbody = document.querySelector('#dailyViolationsTable tbody');
+            tbody.innerHTML = '';
+            
+            violations.forEach(violation => {
+                const row = tbody.insertRow();
+                row.insertCell(0).textContent = new Date(violation.time_date).toLocaleString();
+                row.insertCell(1).textContent = violation.plate;
+                const imgCell = row.insertCell(2);
+                const img = document.createElement('img');
+                img.src = `data:image/jpeg;base64,${violation.pic}`; // Corrected this line
+                img.alt = 'Violation picture';
+                img.style.maxWidth = '100px';
+                imgCell.appendChild(img);
+            });
+        }
+    
+        function showSection(sectionId) {
+            const sections = document.querySelectorAll('.section');
+            sections.forEach(section => {
+                section.style.display = section.id === sectionId ? 'block' : 'none';
+            });
+    
+            if (sectionId === 'overview') {
+                fetchOverviewStats();
+            } else if (sectionId === 'violations') {
+                updateViolationsChart();
+            } else if (sectionId === 'daily-view') {
+                // Set the date input to today's date and fetch violations
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('dateInput').value = today;
+                fetchDailyViolations();
+            }
+        }
+    
+        // Initialize the dashboard
+        showSection('overview');
+    </script>
+    
+</body>
+</html>

@@ -1,0 +1,8 @@
+steps:
+  name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'us-central1-docker.pkg.dev/capstone-t5/doubleparkingviolation-repo/rakkan-image:tag1', '.']
+images:
+  'us-central1-docker.pkg.dev/capstone-t5/doubleparkingviolation-repo/rakkan-image:tag1'
+serviceAccount: 'projects/capstone-t5/serviceAccounts/custom-build-sa@capstone-t5.iam.gserviceaccount.com'
+options:
+  logging: CLOUD_LOGGING_ONLY

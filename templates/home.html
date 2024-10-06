@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - Rakkan</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f2f2f2, #ffffff);
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .logo {
+            width: 400px; /* Adjusted for larger size */
+            margin-bottom: 20px;
+            animation: fadeIn 2s;
+        }
+
+        h1 {
+            font-size: 36px;
+            color: #4A90E2;
+            animation: fadeIn 2s;
+        }
+
+        .button {
+            background-color: #30049E;
+            color: #ffffff;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            margin: 10px;
+            width: 200px;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .button:hover {
+            background-color: #2980b9;
+            transform: scale(1.05);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+
+
+</head>
+<body>
+    <img src="/static/logo.png" alt="Rakkan Logo" class="logo">
+    <h1>Welcome to Rakkan</h1>
+    <button class="button" onclick="window.location.href='/upload'">Upload Video</button>
+    <button class="button" onclick="window.location.href='/dashboard'">View Dashboard</button>
+</body>
+</html>
